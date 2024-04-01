@@ -33,7 +33,7 @@ jobs:
         run: npm pkg set 'repository.url'="${{ github.event.repository.html_url }}.git"
 
       - name: Set author name
-        run: npm pkg set 'author.name'="${{ github.event.release.author.name }}"
+        run: npm pkg set 'author.name'="${{ github.triggering_actor }}"
 
       - name: Install preconfig dependencies if exists
         run: |
