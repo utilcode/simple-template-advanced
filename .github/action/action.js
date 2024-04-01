@@ -63,6 +63,15 @@ async function chooseFromList(list) {
     const url = pkg.package.links.repository;
     const packageName = pkg.package.name;
 
+    const fullPackageInfo = await getPackageInfo(packageName);
+
+    const versions = Object.values(fullPackageInfo.versions || {});
+
+    if (versions && versions[0] && versions[0].dependencies && versions[0].dependencies['node-gyp-build']) {
+      console.log('Skip package %s due to the need of node-gyp-build', packageName);
+      continue;
+    }
+
     console.log('Try to clone package %s, url: %s', packageName, url);
 
     // clone to test-folder
