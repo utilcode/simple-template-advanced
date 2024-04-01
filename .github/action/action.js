@@ -67,8 +67,16 @@ async function chooseFromList(list) {
 
     const versions = Object.values(fullPackageInfo.versions || {});
 
-    if (versions && versions[0] && versions[0].dependencies && versions[0].dependencies['node-gyp-build']) {
-      console.log('Skip package %s due to the need of node-gyp-build', packageName);
+    if (
+      versions &&
+      versions[0] &&
+      versions[0].dependencies &&
+      versions[0].dependencies['node-gyp-build']
+    ) {
+      console.log(
+        'Skip package %s due to the need of node-gyp-build',
+        packageName
+      );
       continue;
     }
 
@@ -176,6 +184,9 @@ async function chooseFromList(list) {
       'donors',
       'maintainers',
       'sponsors',
+      'bugs',
+      'homepage',
+      'repository',
     ];
 
     for (const key of remove) {

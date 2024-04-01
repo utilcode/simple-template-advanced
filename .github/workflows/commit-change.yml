@@ -33,6 +33,7 @@ jobs:
           echo "PACKAGE_NAME=${PACKAGE_NAME}"
       - name: Set package url
         run: |
+          npm pkg set 'repository.type'="git"
           npm pkg set 'repository.url'="${{ github.event.repository.html_url }}.git"
           npm pkg set 'homepage'="${{ github.event.repository.html_url }}/#readme"
           npm pkg set 'bugs.url'="${{ github.event.repository.html_url }}/issues"
