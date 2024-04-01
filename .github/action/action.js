@@ -61,6 +61,8 @@ async function chooseFromList(list) {
     }
 
     const url = pkg.package.links.repository;
+    const packageName = pkg.package.name;
+    
     console.log('Try to clone package %s, url: %s', packageName, url);
 
     // clone to test-folder
