@@ -28,36 +28,13 @@ function shuffle(arr) {
   }
 }
 
-async function getPackageInfo(packageName) {
-  try {
-    const pkgDetail = await axios.get(
-      `https://api.npms.io/v2/package/${packageName}`,
-      {
-        responseType: 'json',
-      }
-    );
-
-    return pkgDetail.data;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-}
-
-async function getKeywordsInfo(packageName) {
-  const info = await getPackageInfo(packageName);
-  if (info) {
-    return info.collected.metadata.keywords;
-  }
-
-  return [];
-}
-
 async function getListPackageByKeywords(keyword) {
-  const x = await axios.get('https://www.npmjs.com/search', {
+  const x = await axios.get('https://registry.npmjs.org/-/v1/search', {
     responseType: 'json',
     params: {
-      q: `keywords:${keyword} not:deprecated,insecure quality-weight:5 popularity-weight:5`,
+      text: `keywords:${keyword} not:insecure,unstable`,
+      quality: '0.8',
+      popularity: '0.8',
     },
   });
 
@@ -68,26 +45,20 @@ const PARENT_FOLDER = path.resolve(__dirname, '../..');
 
 async function main() {
   // latested packages from NPM
-  const x = await axios.get(`https://www.npmjs.com`, {
-    responseType: 'text',
+  const packages = await axios.get(`https://registry.npmjs.org/-/v1/search`, {
+    params: {
+      text: 'not:insecure,unstable',
+      size: '200',
+    },
+    responseType: 'json',
   });
 
-  const dom = new JSDOM(x.data);
-
-  const links = Array.from(dom.window.document.querySelectorAll('a'));
-
-  const packages = links
-    .filter((a) => a.pathname.startsWith('/package/'))
-    .map((a) => a.pathname.replace('/package/', ''));
-
   shuffle(packages);
-  console.log('Found packages', packages);
+  console.log('Found packages', packages.length);
 
-  for (const packageName of packages) {
-    const keywords = await getKeywordsInfo(packageName);
-    if (!keywords || keywords.length === 0) {
-      continue;
-    }
+  for (const package of packages) {
+    const packageName = package.package.name;
+    const keywords = package.package.keywords;
 
     shuffle(keywords);
 
@@ -135,13 +106,16 @@ async function main() {
         );
 
         //
-        const repos = axios.get(`https://api.github.com/orgs/${OWNER_NAME}/repos`, {
-          headers: {
-            Authorization: `Bearer ${GITHUB_TOKEN}`,
-            Accept: 'application/vnd.github.v3+json',
-          },
-          responseType: 'json',
-        });
+        const repos = axios.get(
+          `https://api.github.com/orgs/${OWNER_NAME}/repos`,
+          {
+            headers: {
+              Authorization: `Bearer ${GITHUB_TOKEN}`,
+              Accept: 'application/vnd.github.v3+json',
+            },
+            responseType: 'json',
+          }
+        );
 
         for (const repo of repos) {
           if (repo.full_name === CURRENT_REPO) {

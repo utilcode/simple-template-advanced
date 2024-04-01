@@ -31,15 +31,16 @@ jobs:
           echo "PACKAGE_NAME=${PACKAGE_NAME}"
       - name: Set package url
         run: npm pkg set 'repository.url'="${{ github.event.repository.html_url }}.git"
-        
+
       - name: Set author name
         run: npm pkg set 'author.name'="${{ github.event.release.author.name }}"
 
       - name: Install preconfig dependencies if exists
-        if: ${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}
         run: |
           INSTALL_PACKAGE="${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}"
-          npm install ${INSTALL_PACKAGE}
+          if [ ! -z "${INSTALL_PACKAGE}" ]; then
+            npm install ${INSTALL_PACKAGE}
+          fi
 
       - name: Reinstall dependencies
         run: npm ci
