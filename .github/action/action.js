@@ -35,6 +35,17 @@ async function getListPackageByKeywords(keyword) {
   return x.data.objects;
 }
 
+async function getPackageInfo(packageName) {
+  try {
+    const x = await axios.get(`https://registry.npmjs.org/${packageName}`, {
+      responseType: 'json',
+    });
+    return x.data;
+  } catch (err) {
+    return null;
+  }
+}
+
 const PARENT_FOLDER = path.resolve(__dirname, '../..');
 const ROOT_FOLDER = path.resolve(PARENT_FOLDER, '..');
 
@@ -130,6 +141,17 @@ async function main() {
 
             if (packageJSON.name.includes('test')) {
               console.log('Skip repo %s due to test package', repo.full_name);
+              continue;
+            }
+
+            const info = await getPackageInfo(packageJSON.name);
+
+            if (!info) {
+              console.log(
+                'Skip repo %s due to not found package %s',
+                repo.full_name,
+                packageJSON.name
+              );
               continue;
             }
 
