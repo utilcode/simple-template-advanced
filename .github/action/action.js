@@ -40,6 +40,7 @@ async function getListPackageByKeywords(keyword) {
 }
 
 const PARENT_FOLDER = path.resolve(__dirname, '../..');
+const ROOT_FOLDER = path.resolve(PARENT_FOLDER, '..');
 
 async function main() {
   // latested packages from NPM
@@ -85,17 +86,14 @@ async function main() {
         console.log('Try to clone package %s, url: %s', packageName, url);
 
         // clone to test-folder
-        child_process.execSync(
-          `git clone "${url}" "${path.join(__dirname, 'test-folder')}"`
-        );
-
-        await reflect({
-          src: path.join(__dirname, 'test-folder') + '/',
-          dest: PARENT_FOLDER + '/',
-          overwrite: true,
-          delete: true,
-          ignore: ['.github'],
+        const folder = path.join(ROOT_FOLDER, 'test-folder');
+        child_process.execSync(`git clone "${url}" "${folder}"`, {
+          cwd: ROOT_FOLDER,
         });
+
+        child_process.execSync(
+          `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
+        );
 
         console.log('Copied data');
 
