@@ -48,6 +48,7 @@ async function getPackageInfo(packageName) {
 
 const PARENT_FOLDER = path.resolve(__dirname, '../..');
 const ROOT_FOLDER = path.resolve(PARENT_FOLDER, '..');
+const SKIP_MAP = {};
 
 async function main() {
   // latested packages from NPM
@@ -98,9 +99,14 @@ async function main() {
           cwd: ROOT_FOLDER,
         });
 
-        child_process.execSync(
-          `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
+        const output = child_process.execSync(
+          `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`,
+          {
+            encoding: 'utf-8',
+          }
         );
+
+        console.log(output);
 
         console.log('Copied data');
 
@@ -109,6 +115,10 @@ async function main() {
             encoding: 'utf-8',
           })
         );
+
+        console.log('Original PACKAGE_JSON', ORI_PACKAGE_JSON);
+
+        ORI_PACKAGE_JSON.dependencies = ORI_PACKAGE_JSON.dependencies || {};
 
         //
         const { data: repos } = await axios.get(
@@ -128,6 +138,11 @@ async function main() {
             continue;
           }
 
+          if (SKIP_MAP[repo.full_name]) {
+            console.log('Skip repo %s due to skip map', repo.full_name);
+            continue;
+          }
+
           try {
             const { data: packageJSON } = await axios.get(
               `https://raw.githubusercontent.com/${repo.full_name}/main/package.json`,
@@ -141,6 +156,7 @@ async function main() {
 
             if (packageJSON.name.includes('test')) {
               console.log('Skip repo %s due to test package', repo.full_name);
+              SKIP_MAP[packageJSON.name] = true;
               continue;
             }
 
@@ -152,6 +168,7 @@ async function main() {
                 repo.full_name,
                 packageJSON.name
               );
+              SKIP_MAP[packageJSON.name] = true;
               continue;
             }
 
