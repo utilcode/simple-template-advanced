@@ -10,6 +10,8 @@ const { default: axios } = require('axios');
 const GITHUB_TOKEN = argv.github;
 const OWNER_NAME = argv.owner;
 const CURRENT_REPO = argv.repo;
+const REPO_URL = argv.repourl;
+const PACKAGE_NAME = argv.package;
 
 function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
@@ -212,6 +214,17 @@ async function chooseFromList(list) {
     if (readmefile.length > 1) {
       // remove the default
       fs.unlinkSync(path.join(PARENT_FOLDER, 'README.md'));
+    }
+
+    for (const file of readmefile) {
+      const readmePath = path.join(PARENT_FOLDER, file);
+
+      if (fs.existsSync(readmePath)) {
+        let content = fs.readFileSync(readmePath, { encoding: 'utf-8' });
+        content = content.replaceAll(url, REPO_URL);
+        content = content.replaceAll(packageName, PACKAGE_NAME);
+        fs.writeFileSync(readmePath, content);
+      }
     }
 
     console.log('Done!');

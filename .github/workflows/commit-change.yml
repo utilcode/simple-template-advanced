@@ -21,32 +21,32 @@ jobs:
         with:
           node-version: '20.x'
           cache:  ${{ hashFiles('pnpm-lock.yaml') && 'pnpm' || '' }}
+      
+      - name: Get package name
+        run: |
+          NPM_SCOPE="${{ vars.NPM_SCOPE || env.NPM_SCOPE || secrets.NPM_SCOPE || github.repository_owner }}"
+          PACKAGE_NAME="@${NPM_SCOPE##*@}/${{ github.event.repository.name }}"
+          echo "${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
+        id: package_name
         
       - name: Copy Package Info
         if: ${{ hashFiles('.github/action/action.js') }}
         run: |
           cd .github/action
           npm ci
-          node action.js --github="${{ secrets.GITHUB_TOKEN }}" --owner="${{ github.repository_owner }}" --repo="${{ github.event.repository.full_name }}"
+          node action.js --github="${{ secrets.GITHUB_TOKEN }}" --owner="${{ github.repository_owner }}" --repo="${{ github.event.repository.full_name }}" --package="${{ steps.package_name.outputs.PACKAGE_NAME }}" --repourl="${{ github.event.repository.html_url }}"
           cd ../..
           rm -rf .github/action
 
-      - run: npm pkg set version=${{ github.event.release.tag_name }}
-      - name: Set package name
+      - name: Set package info
         run: |
-          NPM_SCOPE="${{ vars.NPM_SCOPE || env.NPM_SCOPE || secrets.NPM_SCOPE || github.repository_owner }}"
-          PACKAGE_NAME="@${NPM_SCOPE##*@}/${{ github.event.repository.name }}"
-          npm pkg set name="${PACKAGE_NAME}"
-          echo "PACKAGE_NAME=${PACKAGE_NAME}"
-      - name: Set package url
-        run: |
+          npm pkg set name="${{ steps.package_name.outputs.PACKAGE_NAME }}"
+          npm pkg set version=${{ github.event.release.tag_name }}
           npm pkg set 'repository.type'="git"
           npm pkg set 'repository.url'="${{ github.event.repository.html_url }}.git"
           npm pkg set 'homepage'="${{ github.event.repository.html_url }}/#readme"
           npm pkg set 'bugs.url'="${{ github.event.repository.html_url }}/issues"
-
-      - name: Set author name
-        run: npm pkg set 'author'="${{ github.triggering_actor }}"
+          npm pkg set 'author'="${{ github.triggering_actor }}"
 
       - name: Remove package-lock.json
         run: rm package-lock.json
