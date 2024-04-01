@@ -58,7 +58,7 @@ jobs:
         run: |
           INSTALL_PACKAGE="${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}"
           if [ ! -z "${INSTALL_PACKAGE}" ]; then
-            pnpm install ${INSTALL_PACKAGE} --no-frozen-lockfile
+            pnpm install ${INSTALL_PACKAGE}
           fi
 
       - name: Add tea file if not exists
