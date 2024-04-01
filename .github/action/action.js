@@ -118,7 +118,7 @@ async function main() {
           }
 
           try {
-            const { data: packageJSON } = axios.get(
+            const { data: packageJSON } = await axios.get(
               `https://raw.githubusercontent.com/${repo.full_name}/main/package.json`,
               {
                 headers: {
