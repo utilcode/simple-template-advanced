@@ -193,8 +193,8 @@ class Reflect {
   }
 
   is_different(src, dest) {
-    const src_mtime = this.cache[src].mtime.getTime() / 1000;
-    const dest_mtime = this.cache[dest].mtime.getTime() / 1000;
+    const src_mtime = this.cache[src]?.mtime?.getTime() / 1000;
+    const dest_mtime = this.cache[dest]?.mtime?.getTime() / 1000;
 
     if (this.only_newer) {
       return src_mtime > dest_mtime;
