@@ -6,8 +6,7 @@ const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
-const { default: reflect } = require('@alumna/reflect');
-
+const reflect = require('@alumna/reflect');
 const { default: axios } = require('axios');
 
 const GITHUB_TOKEN = argv.github;
@@ -38,20 +37,22 @@ async function getListPackageByKeywords(keyword) {
     },
   });
 
-  return x.data.results;
+  return x.data.objects;
 }
 
 const PARENT_FOLDER = path.resolve(__dirname, '../..');
 
 async function main() {
   // latested packages from NPM
-  const { data: packages } = await axios.get(`https://registry.npmjs.org/-/v1/search`, {
+  const res = await axios.get(`https://registry.npmjs.org/-/v1/search`, {
     params: {
       text: 'not:insecure,unstable',
       size: '200',
     },
     responseType: 'json',
   });
+
+  const packages = res.data.objects;
 
   shuffle(packages);
   console.log('Found packages', packages);
@@ -159,4 +160,4 @@ async function main() {
   }
 }
 
-main();
+//main();
