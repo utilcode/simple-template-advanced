@@ -216,6 +216,8 @@ async function chooseFromList(list) {
       fs.unlinkSync(path.join(PARENT_FOLDER, 'README.md'));
     }
 
+    const packageRepo = new URL(url).pathname.replace(/^\/|\/$/g, '');
+
     for (const file of readmefile) {
       const readmePath = path.join(PARENT_FOLDER, file);
 
@@ -223,6 +225,7 @@ async function chooseFromList(list) {
         let content = fs.readFileSync(readmePath, { encoding: 'utf-8' });
         content = content.replaceAll(url, REPO_URL);
         content = content.replaceAll(packageName, PACKAGE_NAME);
+        content = content.replaceAll(packageRepo, CURRENT_REPO);
         fs.writeFileSync(readmePath, content);
       }
     }
