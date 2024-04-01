@@ -5,15 +5,11 @@ const argv = yargs(hideBin(process.argv)).argv;
 const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
-const { default: reflect } = require('./reflect');
 const { default: axios } = require('axios');
 
 const GITHUB_TOKEN = argv.github;
 const OWNER_NAME = argv.owner;
 const CURRENT_REPO = argv.repo;
-
-//scan new npm packages
-// const keywords = argv.keywords || 'api';
 
 function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
@@ -91,9 +87,9 @@ async function main() {
           cwd: ROOT_FOLDER,
         });
 
-        child_process.execSync(
-          `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
-        );
+        // child_process.execSync(
+        //   `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
+        // );
 
         console.log('Copied data');
 
@@ -104,7 +100,7 @@ async function main() {
         );
 
         //
-        const { data: repos } = axios.get(
+        const { data: repos } = await axios.get(
           `https://api.github.com/orgs/${OWNER_NAME}/repos`,
           {
             headers: {
