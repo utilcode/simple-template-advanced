@@ -62,7 +62,7 @@ async function chooseFromList(list) {
 
     const url = pkg.package.links.repository;
     const packageName = pkg.package.name;
-    
+
     console.log('Try to clone package %s, url: %s', packageName, url);
 
     // clone to test-folder
@@ -126,9 +126,16 @@ async function chooseFromList(list) {
           }
         );
 
+        if (SKIP_MAP[packageJSON.name]) {
+          console.log('Skip repo %s due to skip map', repo.full_name);
+          SKIP_MAP[repo.full_name] = true;
+          continue;
+        }
+
         if (packageJSON.name.includes('test')) {
           console.log('Skip repo %s due to test package', repo.full_name);
           SKIP_MAP[packageJSON.name] = true;
+          SKIP_MAP[repo.full_name] = true;
           continue;
         }
 
@@ -141,6 +148,7 @@ async function chooseFromList(list) {
             packageJSON.name
           );
           SKIP_MAP[packageJSON.name] = true;
+          SKIP_MAP[repo.full_name] = true;
           continue;
         }
 
