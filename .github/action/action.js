@@ -6,7 +6,7 @@ const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
-const reflect = require('@alumna/reflect');
+const { default: reflect } = require('./reflect');
 const { default: axios } = require('axios');
 
 const GITHUB_TOKEN = argv.github;
