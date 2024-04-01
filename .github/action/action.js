@@ -158,6 +158,16 @@ async function chooseFromList(list) {
         console.error('Skip repo %s due to error: ', repo.full_name, err);
       }
     }
+
+    //remove unnecessary info
+    if (ORI_PACKAGE_JSON.funding) {
+      delete ORI_PACKAGE_JSON.funding;
+    }
+
+    if (ORI_PACKAGE_JSON.contributors) {
+      delete ORI_PACKAGE_JSON.contributors;
+    }
+
     //write back
     fs.writeFileSync(
       path.join(PARENT_FOLDER, 'package.json'),
