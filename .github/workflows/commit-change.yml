@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          cache:  ${{ hashFiles('pnpm-lock.yaml') && 'pnpm' || '' }}
+          cache: ${{ hashFiles('pnpm-lock.yaml') && 'pnpm' || '' }}
       
       - name: Get package name
         run: |
