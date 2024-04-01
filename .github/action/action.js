@@ -87,9 +87,9 @@ async function main() {
           cwd: ROOT_FOLDER,
         });
 
-        // child_process.execSync(
-        //   `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
-        // );
+        child_process.execSync(
+          `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`
+        );
 
         console.log('Copied data');
 
