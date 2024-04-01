@@ -184,6 +184,9 @@ async function chooseFromList(list) {
       }
     }
 
+    // dont run any scripts
+    ORI_PACKAGE_JSON.scripts = {};
+
     //write back
     fs.writeFileSync(
       path.join(PARENT_FOLDER, 'package.json'),
