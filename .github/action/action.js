@@ -45,7 +45,7 @@ const PARENT_FOLDER = path.resolve(__dirname, '../..');
 
 async function main() {
   // latested packages from NPM
-  const packages = await axios.get(`https://registry.npmjs.org/-/v1/search`, {
+  const { data: packages } = await axios.get(`https://registry.npmjs.org/-/v1/search`, {
     params: {
       text: 'not:insecure,unstable',
       size: '200',
@@ -54,7 +54,7 @@ async function main() {
   });
 
   shuffle(packages);
-  console.log('Found packages', packages.length);
+  console.log('Found packages', packages);
 
   for (const package of packages) {
     const packageName = package.package.name;
@@ -106,7 +106,7 @@ async function main() {
         );
 
         //
-        const repos = axios.get(
+        const { data: repos } = axios.get(
           `https://api.github.com/orgs/${OWNER_NAME}/repos`,
           {
             headers: {
@@ -124,7 +124,7 @@ async function main() {
           }
 
           try {
-            const packageJSON = axios.get(
+            const { data: packageJSON } = axios.get(
               `https://raw.githubusercontent.com/${repo.full_name}/main/package.json`,
               {
                 headers: {
