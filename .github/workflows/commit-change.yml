@@ -49,7 +49,7 @@ jobs:
           npm pkg set 'author'="${{ github.triggering_actor }}"
 
       - name: Remove package-lock.json
-        run: rm package-lock.json
+        run: rm -rf package-lock.json
 
       - name: Reinstall dependencies
         run: pnpm install --no-frozen-lockfile
