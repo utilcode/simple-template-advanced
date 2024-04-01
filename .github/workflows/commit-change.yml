@@ -26,7 +26,7 @@ jobs:
         run: |
           NPM_SCOPE="${{ vars.NPM_SCOPE || env.NPM_SCOPE || secrets.NPM_SCOPE || github.repository_owner }}"
           PACKAGE_NAME="@${NPM_SCOPE##*@}/${{ github.event.repository.name }}"
-          echo "${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
         id: package_name
         
       - name: Copy Package Info
