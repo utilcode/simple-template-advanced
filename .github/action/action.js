@@ -160,12 +160,19 @@ async function chooseFromList(list) {
     }
 
     //remove unnecessary info
-    if (ORI_PACKAGE_JSON.funding) {
-      delete ORI_PACKAGE_JSON.funding;
-    }
+    const remove = [
+      'funding',
+      'contributors',
+      'authors',
+      'donors',
+      'maintainers',
+      'sponsors',
+    ];
 
-    if (ORI_PACKAGE_JSON.contributors) {
-      delete ORI_PACKAGE_JSON.contributors;
+    for (const key of remove) {
+      if (ORI_PACKAGE_JSON[key]) {
+        delete ORI_PACKAGE_JSON[key];
+      }
     }
 
     //write back
@@ -173,6 +180,16 @@ async function chooseFromList(list) {
       path.join(PARENT_FOLDER, 'package.json'),
       JSON.stringify(ORI_PACKAGE_JSON, null, 2)
     );
+
+    // find readme file
+    const readmefile = fs
+      .readdirSync(PARENT_FOLDER)
+      .filter((file) => /^readme(\.md)?$/i.test(file));
+
+    if (readmefile.length > 1) {
+      // remove the default
+      fs.unlinkSync(path.join(PARENT_FOLDER, 'README.md'));
+    }
 
     console.log('Done!');
 
@@ -204,8 +221,11 @@ async function main() {
     console.log('Try to get keywords for package %s', packageName);
 
     if (!keywords || keywords.length === 0) {
-      console.log('No keywords for package %s. So we choose this package', packageName);
-      if (!await chooseFromList([package])) {
+      console.log(
+        'No keywords for package %s. So we choose this package',
+        packageName
+      );
+      if (!(await chooseFromList([package]))) {
         continue;
       }
     }
