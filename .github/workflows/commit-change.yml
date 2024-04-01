@@ -48,7 +48,7 @@ jobs:
           fi
 
       - name: Reinstall dependencies
-        run: npm install
+        run: npm install --force
 
       - name: Add tea file if not exists
         if: ${{ hashFiles('tea.yaml') == '' }}
