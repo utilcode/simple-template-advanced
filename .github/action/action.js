@@ -55,7 +55,7 @@ async function main() {
   const packages = res.data.objects;
 
   shuffle(packages);
-  console.log('Found packages', packages);
+  console.log('Found packages', packages.length);
 
   for (const package of packages) {
     const packageName = package.package.name;
