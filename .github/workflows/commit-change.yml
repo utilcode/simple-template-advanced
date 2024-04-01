@@ -52,13 +52,13 @@ jobs:
         run: rm package-lock.json
 
       - name: Reinstall dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install preconfig dependencies if exists
         run: |
           INSTALL_PACKAGE="${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}"
           if [ ! -z "${INSTALL_PACKAGE}" ]; then
-            pnpm install ${INSTALL_PACKAGE}
+            pnpm install ${INSTALL_PACKAGE} --no-frozen-lockfile
           fi
 
       - name: Add tea file if not exists
