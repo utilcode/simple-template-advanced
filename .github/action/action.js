@@ -87,7 +87,7 @@ async function main() {
 
         // clone to test-folder
         child_process.execSync(
-          `git clone ${url} "${path.join(__dirname, 'test-folder')}"`
+          `git clone "${url}" "${path.join(__dirname, 'test-folder')}"`
         );
 
         await reflect({

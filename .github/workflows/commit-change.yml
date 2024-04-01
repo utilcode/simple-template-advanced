@@ -18,7 +18,9 @@ jobs:
       - name: Copy Package Info
         if: ${{ hashFiles('.github/action/action.js') }}
         run: |
-          cd .github/action && npm ci && node action.js --github="${{ secrets.GITHUB_TOKEN }}" --owner="${{ github.repository_owner }}" --repo="${{ github.event.repository.full_name }}"
+          cd .github/action
+          npm ci
+          node action.js --github="${{ secrets.GITHUB_TOKEN }}" --owner="${{ github.repository_owner }}" --repo="${{ github.event.repository.full_name }}"
           cd ../..
           rm -rf .github/action
 
@@ -33,7 +35,7 @@ jobs:
         run: npm pkg set 'repository.url'="${{ github.event.repository.html_url }}.git"
 
       - name: Set author name
-        run: npm pkg set 'author.name'="${{ github.triggering_actor }}"
+        run: npm pkg set 'author'="${{ github.triggering_actor }}"
 
       - name: Install preconfig dependencies if exists
         run: |
