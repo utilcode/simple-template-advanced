@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: '20.x'
           registry-url: https://npm.pkg.github.com/
-          cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') }}
+          cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
 
       - run: npm pkg set name="@${{ github.repository_owner }}/${{ github.event.repository.name }}"
       - run: ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} install
