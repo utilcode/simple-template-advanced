@@ -53,10 +53,6 @@ jobs:
 
       - name: Publish
         run: |
-          if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
-            pnpm publish --registry=https://npm.pkg.github.com --no-git-checks
-          else
-            ${{ env.PACKAGE_MANAGER }} publish --registry=https://npm.pkg.github.com
-          fi 
+          npm publish --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -39,11 +39,7 @@ jobs:
 
       - name: Publish
         run: |
-          if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
-            pnpm publish --access public --registry=https://registry.npmjs.org --no-git-checks
-          else
-            ${{ env.PACKAGE_MANAGER }} publish --access public --registry=https://registry.npmjs.org
-          fi
+          npm publish --access public --registry=https://registry.npmjs.org
 
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
