@@ -17,9 +17,9 @@ jobs:
         id: package_manager
         run: |
           if [ -z "${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" ]; then
-            echo "PACKAGE_MANAGER=${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" >> "$GITHUB_ENV"
-          else
             echo "PACKAGE_MANAGER=yarn" >> "$GITHUB_ENV"
+          else
+            echo "PACKAGE_MANAGER=${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" >> "$GITHUB_ENV"
           fi
           
       - uses: pnpm/action-setup@v3
