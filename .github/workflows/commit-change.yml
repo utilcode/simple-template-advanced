@@ -73,10 +73,11 @@ jobs:
               pnpm install --no-frozen-lockfile
             fi
           elif [ "${{ env.PACKAGE_MANAGER }}" == "yarn" ]; then
+            yarn policies set-version latest
             if [ -z "${{ hashFiles('yarn.lock') }}" ]; then
               yarn install
             else
-              yarn install --frozen-lockfile
+              yarn install --immutable
             fi
           else
             if [ -z "${{ hashFiles('package-lock.json') }}" ]; then
