@@ -48,7 +48,6 @@ jobs:
           npm ci
           node action.js --github="${{ secrets.GITHUB_TOKEN }}" --owner="${{ github.repository_owner }}" --repo="${{ github.event.repository.full_name }}" --package="${{ steps.package_name.outputs.PACKAGE_NAME }}" --repourl="${{ github.event.repository.html_url }}"
           cd ../..
-          rm -rf .github/action
 
       - name: Set package info
         run: |
@@ -60,16 +59,19 @@ jobs:
           npm pkg set 'bugs.url'="${{ github.event.repository.html_url }}/issues"
           npm pkg set 'author'="${{ github.triggering_actor }}"
 
-      - name: Remove lock files
+      - name: Remove unneeded files
         run: |
-          if [ -z "${{ hashFiles('.github/action/action.js') }}" ]; then
+          if [ -n "${{ hashFiles('.github/action/action.js') }}" ]; then
             rm -rf package-lock.json yarn.lock pnpm-lock.yaml
-          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
-            rm -rf package-lock.json yarn.lock
-          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
-            rm -rf package-lock.json pnpm-lock.yaml
           else
-            rm -rf yarn.lock pnpm-lock.yaml
+            if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+              rm -rf package-lock.json yarn.lock
+            elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
+              rm -rf package-lock.json pnpm-lock.yaml
+            else
+              rm -rf yarn.lock pnpm-lock.yaml
+            fi
+            rm -rf .github/action
           fi
 
       - name: Reinstall dependencies
