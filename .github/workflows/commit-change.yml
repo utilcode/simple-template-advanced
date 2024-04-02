@@ -12,16 +12,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+
+      - name: Get package manager config to output
+        id: package_manager
+        run: |
+          if [ -z "${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" ]; then
+            echo "PACKAGE_MANAGER=${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" >> "$GITHUB_ENV"
+          else
+            echo "PACKAGE_MANAGER=yarn" >> "$GITHUB_ENV"
+          fi
           
       - uses: pnpm/action-setup@v3
+        name: Setup pnpm
+        if: ${{ steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' }}
         with:
           version: 8
 
       - uses: actions/setup-node@v4
+        name: Setup NodeJS
         with:
           node-version: '20.x'
-          cache: ${{ hashFiles('pnpm-lock.yaml') && 'pnpm' || '' }}
-      
+          cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') }}
+
       - name: Get package name
         run: |
           NPM_SCOPE="${{ vars.NPM_SCOPE || env.NPM_SCOPE || secrets.NPM_SCOPE || github.repository_owner }}"
@@ -48,11 +60,39 @@ jobs:
           npm pkg set 'bugs.url'="${{ github.event.repository.html_url }}/issues"
           npm pkg set 'author'="${{ github.triggering_actor }}"
 
-      - name: Remove package-lock.json
-        run: rm -rf package-lock.json
+      - name: Remove lock files
+        run: |
+          if [ -z "${{ hashFiles('.github/action/action.js') }}" ]; then
+            rm -rf package-lock.json yarn.lock pnpm-lock.yaml
+          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+            rm -rf package-lock.json yarn.lock
+          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
+            rm -rf package-lock.json pnpm-lock.yaml
+          else
+            rm -rf yarn.lock pnpm-lock.yaml
+          fi
 
       - name: Reinstall dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+            if [ -z "${{ hashFiles('pnpm-lock.yaml') }}" ]; then
+              pnpm install
+            else
+              pnpm install --no-frozen-lockfile
+            fi
+          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
+            if [ -z "${{ hashFiles('yarn.lock') }}" ]; then
+              yarn install
+            else
+              yarn install --frozen-lockfile
+            fi
+          else
+            if [ -z "${{ hashFiles('package-lock.json') }}" ]; then
+              npm install
+            else
+              npm ci
+            fi
+          fi
         env:
           NODE_OPTIONS: --max_old_space_size=10240
 
@@ -60,7 +100,7 @@ jobs:
         run: |
           INSTALL_PACKAGE="${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}"
           if [ ! -z "${INSTALL_PACKAGE}" ]; then
-            pnpm install ${INSTALL_PACKAGE}
+            ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} install ${INSTALL_PACKAGE}
           fi
         env:
           NODE_OPTIONS: --max_old_space_size=10240
