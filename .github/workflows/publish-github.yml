@@ -40,12 +40,23 @@ jobs:
           cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
 
       - run: npm pkg set name="@${{ github.repository_owner }}/${{ github.event.repository.name }}"
-      - run: ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} install
-      - run: |
+
+      - name: Reinstall to reflect new name
+        run: |
+          if [ -z "${{ hashFiles('package-lock.json') && steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' }}" ]; then
+            npm ci
+          elif [ -z "${{ hashFiles('pnpm-lock.yaml') && steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' }}" ]; then
+            pnpm install --frozen-lockfile
+          elif [ -z "${{ hashFiles('yarn.lock') && steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' }}" ]; then
+            yarn install --frozen-lockfile
+          fi
+
+      - name: Publish
+        run: |
           if [ ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} == "pnpm" ]; then
             pnpm publish --registry=https://npm.pkg.github.com --no-git-checks
           else
-            ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} publish --registry=https://npm.pkg.github.com
+            "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" publish --registry=https://npm.pkg.github.com
           fi 
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
