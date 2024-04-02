@@ -5,6 +5,7 @@ on:
 
 jobs:
   commit-change:
+    name: Commit Changes
     runs-on: ubuntu-latest
     permissions:
       contents: write
