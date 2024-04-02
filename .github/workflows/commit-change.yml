@@ -67,24 +67,12 @@ jobs:
         run: |
           echo PACKAGE_MANAGER="${{ env.PACKAGE_MANAGER }}"
           if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
-            if [ -z "${{ hashFiles('pnpm-lock.yaml') }}" ]; then
-              pnpm install
-            else
-              pnpm install --no-frozen-lockfile
-            fi
+            pnpm install --no-frozen-lockfile
           elif [ "${{ env.PACKAGE_MANAGER }}" == "yarn" ]; then
             yarn policies set-version stable
-            if [ -z "${{ hashFiles('yarn.lock') }}" ]; then
-              yarn install
-            else
-              yarn install --immutable
-            fi
+            yarn install --no-immutable
           else
-            if [ -z "${{ hashFiles('package-lock.json') }}" ]; then
-              npm install
-            else
-              npm ci
-            fi
+            npm install
           fi
         env:
           NODE_OPTIONS: --max_old_space_size=10240
