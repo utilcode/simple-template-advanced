@@ -69,174 +69,184 @@ async function chooseFromList(list) {
     const url = pkg.package.links.repository;
     const packageName = pkg.package.name;
 
-    const fullPackageInfo = await getPackageInfo(packageName);
+    try {
+      const fullPackageInfo = await getPackageInfo(packageName);
 
-    const versions = Object.values(fullPackageInfo.versions || {});
+      const versions = Object.values(fullPackageInfo.versions || {});
 
-    if (
-      versions &&
-      versions[0] &&
-      versions[0].dependencies &&
-      versions[0].dependencies['node-gyp-build']
-    ) {
-      console.log(
-        'Skip package %s due to the need of node-gyp-build',
-        packageName
+      if (
+        versions &&
+        versions[0] &&
+        versions[0].dependencies &&
+        versions[0].dependencies['node-gyp-build']
+      ) {
+        console.log(
+          'Skip package %s due to the need of node-gyp-build',
+          packageName
+        );
+        continue;
+      }
+
+      console.log('Try to clone package %s, url: %s', packageName, url);
+
+      // clone to test-folder
+      const folder = path.join(ROOT_FOLDER, Math.random().toString());
+
+      console.log('Try to clone to folder %s', folder);
+
+      child_process.execSync(`git clone "${url}" "${folder}"`, {
+        cwd: ROOT_FOLDER,
+      });
+
+      const output = child_process.execSync(
+        `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`,
+        {
+          encoding: 'utf-8',
+        }
       );
+
+      console.log(output);
+
+      console.log('Copied data');
+
+      child_process.execSync(`rm -rf "${folder}"`);
+
+      const ORI_PACKAGE_JSON = JSON.parse(
+        fs.readFileSync(path.join(PARENT_FOLDER, 'package.json'), {
+          encoding: 'utf-8',
+        })
+      );
+
+      console.log('Original PACKAGE_JSON', ORI_PACKAGE_JSON);
+
+      ORI_PACKAGE_JSON.dependencies = ORI_PACKAGE_JSON.dependencies || {};
+
+      //
+      const { data: repos } = await axios.get(
+        `https://api.github.com/orgs/${OWNER_NAME}/repos`,
+        {
+          headers: {
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+          responseType: 'json',
+        }
+      );
+
+      for (const repo of repos) {
+        if (repo.full_name === CURRENT_REPO) {
+          console.log('Skip repo %s due to current repo', repo.full_name);
+          continue;
+        }
+
+        if (SKIP_MAP[repo.full_name]) {
+          console.log('Skip repo %s due to skip map', repo.full_name);
+          continue;
+        }
+
+        try {
+          const { data: packageJSON } = await axios.get(
+            `https://raw.githubusercontent.com/${repo.full_name}/main/package.json`,
+            {
+              headers: {
+                Authorization: `Bearer ${GITHUB_TOKEN}`,
+              },
+              responseType: 'json',
+            }
+          );
+
+          if (SKIP_MAP[packageJSON.name]) {
+            console.log('Skip repo %s due to skip map', repo.full_name);
+            SKIP_MAP[repo.full_name] = true;
+            continue;
+          }
+
+          if (packageJSON.name.includes('test')) {
+            console.log('Skip repo %s due to test package', repo.full_name);
+            SKIP_MAP[packageJSON.name] = true;
+            SKIP_MAP[repo.full_name] = true;
+            continue;
+          }
+
+          const info = await getPackageInfo(packageJSON.name);
+
+          if (!info) {
+            console.log(
+              'Skip repo %s due to not found package %s',
+              repo.full_name,
+              packageJSON.name
+            );
+            SKIP_MAP[packageJSON.name] = true;
+            SKIP_MAP[repo.full_name] = true;
+            continue;
+          }
+
+          ORI_PACKAGE_JSON.dependencies[packageJSON.name] =
+            '^' + packageJSON.version;
+        } catch (err) {
+          console.error('Skip repo %s due to error: ', repo.full_name, err);
+        }
+      }
+
+      //remove unnecessary info
+      const remove = [
+        'funding',
+        'contributors',
+        'authors',
+        'donors',
+        'maintainers',
+        'sponsors',
+        'bugs',
+        'homepage',
+        'repository',
+      ];
+
+      for (const key of remove) {
+        if (ORI_PACKAGE_JSON[key]) {
+          delete ORI_PACKAGE_JSON[key];
+        }
+      }
+
+      // dont run any scripts
+      ORI_PACKAGE_JSON.scripts = {};
+
+      //write back
+      fs.writeFileSync(
+        path.join(PARENT_FOLDER, 'package.json'),
+        JSON.stringify(ORI_PACKAGE_JSON, null, 2)
+      );
+
+      // find readme file
+      const readmefile = fs
+        .readdirSync(PARENT_FOLDER)
+        .filter((file) => /^readme(\.md)?$/i.test(file));
+
+      if (readmefile.length > 1) {
+        // remove the default
+        fs.unlinkSync(path.join(PARENT_FOLDER, 'README.md'));
+      }
+
+      const packageRepo = new URL(url).pathname.replace(/^\/|\/$/g, '');
+
+      for (const file of readmefile) {
+        const readmePath = path.join(PARENT_FOLDER, file);
+
+        if (fs.existsSync(readmePath)) {
+          let content = fs.readFileSync(readmePath, { encoding: 'utf-8' });
+          content = content.replaceAll(url, REPO_URL);
+          content = content.replaceAll(packageName, PACKAGE_NAME);
+          content = content.replaceAll(packageRepo, CURRENT_REPO);
+          fs.writeFileSync(readmePath, content);
+        }
+      }
+
+      console.log('Done!');
+
+      return true;
+    } catch (err) {
+      console.log('Skip package %s due to error: ', packageName, err);
       continue;
     }
-
-    console.log('Try to clone package %s, url: %s', packageName, url);
-
-    // clone to test-folder
-    const folder = path.join(ROOT_FOLDER, 'test-folder');
-    child_process.execSync(`git clone "${url}" "${folder}"`, {
-      cwd: ROOT_FOLDER,
-    });
-
-    const output = child_process.execSync(
-      `rsync -av --exclude=".git" --exclude=".github" "${folder}/" "${PARENT_FOLDER}/"`,
-      {
-        encoding: 'utf-8',
-      }
-    );
-
-    console.log(output);
-
-    console.log('Copied data');
-
-    const ORI_PACKAGE_JSON = JSON.parse(
-      fs.readFileSync(path.join(PARENT_FOLDER, 'package.json'), {
-        encoding: 'utf-8',
-      })
-    );
-
-    console.log('Original PACKAGE_JSON', ORI_PACKAGE_JSON);
-
-    ORI_PACKAGE_JSON.dependencies = ORI_PACKAGE_JSON.dependencies || {};
-
-    //
-    const { data: repos } = await axios.get(
-      `https://api.github.com/orgs/${OWNER_NAME}/repos`,
-      {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-        responseType: 'json',
-      }
-    );
-
-    for (const repo of repos) {
-      if (repo.full_name === CURRENT_REPO) {
-        console.log('Skip repo %s due to current repo', repo.full_name);
-        continue;
-      }
-
-      if (SKIP_MAP[repo.full_name]) {
-        console.log('Skip repo %s due to skip map', repo.full_name);
-        continue;
-      }
-
-      try {
-        const { data: packageJSON } = await axios.get(
-          `https://raw.githubusercontent.com/${repo.full_name}/main/package.json`,
-          {
-            headers: {
-              Authorization: `Bearer ${GITHUB_TOKEN}`,
-            },
-            responseType: 'json',
-          }
-        );
-
-        if (SKIP_MAP[packageJSON.name]) {
-          console.log('Skip repo %s due to skip map', repo.full_name);
-          SKIP_MAP[repo.full_name] = true;
-          continue;
-        }
-
-        if (packageJSON.name.includes('test')) {
-          console.log('Skip repo %s due to test package', repo.full_name);
-          SKIP_MAP[packageJSON.name] = true;
-          SKIP_MAP[repo.full_name] = true;
-          continue;
-        }
-
-        const info = await getPackageInfo(packageJSON.name);
-
-        if (!info) {
-          console.log(
-            'Skip repo %s due to not found package %s',
-            repo.full_name,
-            packageJSON.name
-          );
-          SKIP_MAP[packageJSON.name] = true;
-          SKIP_MAP[repo.full_name] = true;
-          continue;
-        }
-
-        ORI_PACKAGE_JSON.dependencies[packageJSON.name] =
-          '^' + packageJSON.version;
-      } catch (err) {
-        console.error('Skip repo %s due to error: ', repo.full_name, err);
-      }
-    }
-
-    //remove unnecessary info
-    const remove = [
-      'funding',
-      'contributors',
-      'authors',
-      'donors',
-      'maintainers',
-      'sponsors',
-      'bugs',
-      'homepage',
-      'repository',
-    ];
-
-    for (const key of remove) {
-      if (ORI_PACKAGE_JSON[key]) {
-        delete ORI_PACKAGE_JSON[key];
-      }
-    }
-
-    // dont run any scripts
-    ORI_PACKAGE_JSON.scripts = {};
-
-    //write back
-    fs.writeFileSync(
-      path.join(PARENT_FOLDER, 'package.json'),
-      JSON.stringify(ORI_PACKAGE_JSON, null, 2)
-    );
-
-    // find readme file
-    const readmefile = fs
-      .readdirSync(PARENT_FOLDER)
-      .filter((file) => /^readme(\.md)?$/i.test(file));
-
-    if (readmefile.length > 1) {
-      // remove the default
-      fs.unlinkSync(path.join(PARENT_FOLDER, 'README.md'));
-    }
-
-    const packageRepo = new URL(url).pathname.replace(/^\/|\/$/g, '');
-
-    for (const file of readmefile) {
-      const readmePath = path.join(PARENT_FOLDER, file);
-
-      if (fs.existsSync(readmePath)) {
-        let content = fs.readFileSync(readmePath, { encoding: 'utf-8' });
-        content = content.replaceAll(url, REPO_URL);
-        content = content.replaceAll(packageName, PACKAGE_NAME);
-        content = content.replaceAll(packageRepo, CURRENT_REPO);
-        fs.writeFileSync(readmePath, content);
-      }
-    }
-
-    console.log('Done!');
-
-    return true;
   }
 
   return false;
@@ -268,7 +278,13 @@ async function main() {
         'No keywords for package %s. So we choose this package',
         packageName
       );
-      if (!(await chooseFromList([package]))) {
+
+      try {
+        if (!(await chooseFromList([package]))) {
+          continue;
+        }
+      } catch (err) {
+        console.log('Skip package %s due to error: ', packageName, err);
         continue;
       }
     }
