@@ -39,7 +39,7 @@ jobs:
 
       - name: Publish
         run: |
-          if [ ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} == "pnpm" ]; then
+          if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
             pnpm publish --access public --registry=https://registry.npmjs.org --no-git-checks
           else
             "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" publish --access public --registry=https://registry.npmjs.org
