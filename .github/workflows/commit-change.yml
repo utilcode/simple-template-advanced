@@ -65,6 +65,7 @@ jobs:
 
       - name: Reinstall dependencies
         run: |
+          echo "PACKAGE_MANAGER = ${{ steps.package_manager.outputs.PACKAGE_MANAGER }}"
           if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
             if [ -z "${{ hashFiles('pnpm-lock.yaml') }}" ]; then
               pnpm install
