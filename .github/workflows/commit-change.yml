@@ -14,8 +14,7 @@ jobs:
         with:
           ref: main
 
-      - name: Get package manager config to output
-        id: package_manager
+      - name: Get package manager config to env
         run: |
           if [ -z "${{ vars.PACKAGE_MANAGER || env.PACKAGE_MANAGER || secrets.PACKAGE_MANAGER }}" ]; then
             echo "PACKAGE_MANAGER=yarn" >> "$GITHUB_ENV"
@@ -25,7 +24,7 @@ jobs:
           
       - uses: pnpm/action-setup@v3
         name: Setup pnpm
-        if: ${{ steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' }}
+        if: ${{ env.PACKAGE_MANAGER == 'pnpm' }}
         with:
           version: 8
 
@@ -33,7 +32,7 @@ jobs:
         name: Setup NodeJS
         with:
           node-version: '20.x'
-          cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
+          cache: ${{ (env.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (env.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (env.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
 
       - name: Get package name
         run: |
@@ -66,14 +65,14 @@ jobs:
 
       - name: Reinstall dependencies
         run: |
-          echo PACKAGE_MANAGER="${{ steps.package_manager.outputs.PACKAGE_MANAGER }}"
-          if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+          echo PACKAGE_MANAGER="${{ env.PACKAGE_MANAGER }}"
+          if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
             if [ -z "${{ hashFiles('pnpm-lock.yaml') }}" ]; then
               pnpm install
             else
               pnpm install --no-frozen-lockfile
             fi
-          elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
+          elif [ "${{ env.PACKAGE_MANAGER }}" == "yarn" ]; then
             if [ -z "${{ hashFiles('yarn.lock') }}" ]; then
               yarn install
             else
@@ -93,7 +92,7 @@ jobs:
         run: |
           INSTALL_PACKAGE="${{ vars.PACKAGES || env.PACKAGES || secrets.PACKAGES }}"
           if [ ! -z "${INSTALL_PACKAGE}" ]; then
-            ${{ steps.package_manager.outputs.PACKAGE_MANAGER }} install ${INSTALL_PACKAGE}
+            ${{ env.PACKAGE_MANAGER }} install ${INSTALL_PACKAGE}
           fi
         env:
           NODE_OPTIONS: --max_old_space_size=10240

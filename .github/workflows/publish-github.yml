@@ -29,7 +29,7 @@ jobs:
           fi
   
       - uses: pnpm/action-setup@v3
-        if: ${{ steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' }}
+        if: ${{ env.PACKAGE_MANAGER == 'pnpm' }}
         with:
           version: 8
 
@@ -37,26 +37,26 @@ jobs:
         with:
           node-version: '20.x'
           registry-url: https://npm.pkg.github.com/
-          cache: ${{ (steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
+          cache: ${{ (env.PACKAGE_MANAGER == 'pnpm' && hashFiles('pnpm-lock.yaml') && 'pnpm') || (env.PACKAGE_MANAGER == 'yarn' && hashFiles('yarn.lock') && 'yarn') || (env.PACKAGE_MANAGER == 'npm' && hashFiles('package-lock.json') && 'npm') || '' }}
 
       - run: npm pkg set name="@${{ github.repository_owner }}/${{ github.event.repository.name }}"
 
       - name: Reinstall to reflect new name
         run: |
-          if [ -z "${{ hashFiles('package-lock.json') && steps.package_manager.outputs.PACKAGE_MANAGER == 'npm' || '' }}" ]; then
+          if [ -z "${{ hashFiles('package-lock.json') && env.PACKAGE_MANAGER == 'npm' || '' }}" ]; then
             npm ci
-          elif [ -z "${{ hashFiles('pnpm-lock.yaml') && steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' || '' }}" ]; then
+          elif [ -z "${{ hashFiles('pnpm-lock.yaml') && env.PACKAGE_MANAGER == 'pnpm' || '' }}" ]; then
             pnpm install --frozen-lockfile
-          elif [ -z "${{ hashFiles('yarn.lock') && steps.package_manager.outputs.PACKAGE_MANAGER == 'yarn' || '' }}" ]; then
+          elif [ -z "${{ hashFiles('yarn.lock') && env.PACKAGE_MANAGER == 'yarn' || '' }}" ]; then
             yarn install --frozen-lockfile
           fi
 
       - name: Publish
         run: |
-          if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+          if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
             pnpm publish --registry=https://npm.pkg.github.com --no-git-checks
           else
-            "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" publish --registry=https://npm.pkg.github.com
+            ${{ env.PACKAGE_MANAGER }} publish --registry=https://npm.pkg.github.com
           fi 
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

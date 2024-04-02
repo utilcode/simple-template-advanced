@@ -28,7 +28,7 @@ jobs:
           fi
 
       - uses: pnpm/action-setup@v3
-        if: ${{ steps.package_manager.outputs.PACKAGE_MANAGER == 'pnpm' }}
+        if: ${{ env.PACKAGE_MANAGER == 'pnpm' }}
         with:
           version: 8
   
@@ -39,10 +39,10 @@ jobs:
 
       - name: Publish
         run: |
-          if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
+          if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
             pnpm publish --access public --registry=https://registry.npmjs.org --no-git-checks
           else
-            "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" publish --access public --registry=https://registry.npmjs.org
+            ${{ env.PACKAGE_MANAGER }} publish --access public --registry=https://registry.npmjs.org
           fi
 
         env:
