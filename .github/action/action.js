@@ -50,6 +50,10 @@ async function getPackageInfo(packageName) {
 
 const PARENT_FOLDER = path.resolve(__dirname, '../..');
 const ROOT_FOLDER = path.resolve(PARENT_FOLDER, '..');
+
+console.log('ROOT_FOLDER=%s', ROOT_FOLDER);
+console.log('PARENT_FOLDER=%s', PARENT_FOLDER);
+
 const SKIP_MAP = {};
 
 async function chooseFromList(list) {
