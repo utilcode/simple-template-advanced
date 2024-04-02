@@ -63,14 +63,6 @@ jobs:
         run: |
           if [ -n "${{ hashFiles('.github/action/action.js') }}" ]; then
             rm -rf package-lock.json yarn.lock pnpm-lock.yaml
-          else
-            if [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "pnpm" ]; then
-              rm -rf package-lock.json yarn.lock
-            elif [ "${{ steps.package_manager.outputs.PACKAGE_MANAGER }}" == "yarn" ]; then
-              rm -rf package-lock.json pnpm-lock.yaml
-            else
-              rm -rf yarn.lock pnpm-lock.yaml
-            fi
             rm -rf .github/action
           fi
 
