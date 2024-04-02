@@ -60,11 +60,8 @@ jobs:
           npm pkg set 'author'="${{ github.triggering_actor }}"
 
       - name: Remove unneeded files
-        run: |
-          if [ -n "${{ hashFiles('.github/action/action.js') }}" ]; then
-            rm -rf package-lock.json yarn.lock pnpm-lock.yaml
-            rm -rf .github/action
-          fi
+        if: ${{ hashFiles('.github/action/action.js') }}
+        run: rm -rf package-lock.json yarn.lock pnpm-lock.yaml .github/action
 
       - name: Reinstall dependencies
         run: |
