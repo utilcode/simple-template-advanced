@@ -43,12 +43,12 @@ jobs:
 
       - name: Reinstall to reflect new name
         run: |
-          if [ -z "${{ hashFiles('package-lock.json') && env.PACKAGE_MANAGER == 'npm' || '' }}" ]; then
+          if [ "${{ env.PACKAGE_MANAGER }}" == "npm" ]; then
             npm ci
-          elif [ -z "${{ hashFiles('pnpm-lock.yaml') && env.PACKAGE_MANAGER == 'pnpm' || '' }}" ]; then
-            pnpm install --frozen-lockfile
-          elif [ -z "${{ hashFiles('yarn.lock') && env.PACKAGE_MANAGER == 'yarn' || '' }}" ]; then
-            yarn install --frozen-lockfile
+          elif [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
+            pnpm install --no-frozen-lockfile
+          elif [ "${{ env.PACKAGE_MANAGER }}" == "yarn" ]; then
+            yarn install --no-immutable
           fi
 
       - name: Publish
