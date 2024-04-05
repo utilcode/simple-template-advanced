@@ -69,7 +69,12 @@ jobs:
           if [ "${{ env.PACKAGE_MANAGER }}" == "pnpm" ]; then
             pnpm install --no-frozen-lockfile
           elif [ "${{ env.PACKAGE_MANAGER }}" == "yarn" ]; then
-            yarn policies set-version stable
+            # check if .yar path esists
+            if [ -d ".yarn" ]; then
+              yarn set version from sources
+            else
+              yarn policies set-version stable
+            fi
             yarn install --no-immutable
           else
             npm install
